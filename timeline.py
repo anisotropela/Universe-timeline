@@ -1,21 +1,53 @@
+import argparse
 import numpy as np
 from numpy import sqrt,pi,exp
 import scipy as sp
-from astropy.cosmology import FlatLambdaCDM, Planck15
+from astropy.cosmology import FlatLambdaCDM, Planck15, WMAP9
 from astropy import units as u
 from astropy.units import cds
 import matplotlib.pyplot as plt
 import astropy.constants as cc
 from scipy.special import zeta
-cosmoP = FlatLambdaCDM(H0=67.81, Om0=0.308, Ob0=.0484, name='Planck')
 from scipy.optimize import newton
+cosmoP = FlatLambdaCDM(H0       = 67.81,
+                       Om0      = 0.308,
+                       Ob0      = .0484,
+                     # Onu0     = 3.710122469245305e-05,
+                     # Ogamma0  = 5.373825182529615e-05,
+                       name     ='Planck')
+"""
+Purpose:
+    Calculate properties of the Universe at time t
 
-def timeline(t,               #Time with unit
-             cosmo  = Planck15, #Cosmology, astropy-style
-             Runit  = u.cm,   #Unit to display size of Universe in
-             cunit  = u.cm,   #Unit to display clumps in
-             output = False   #Output Evernote string
-             ):
+Usage:
+    From the command line:
+    > python timeline time unit
+
+Arguments:
+    time    Time quantity
+    unit    Unit of time. Allowed values are
+                s:      Seconds
+                min:    Minutes
+                h:      Hours
+                day:    Days
+                yr:     Years
+                kyr:    kilo-years
+                Myr:    mega-years
+                Gyr:    giga-years
+
+Examples:
+    > python timeline 1e-32 s    # Properties just after inflation
+    > python timeline 13.79 Gyr  # Properties today
+
+Notes:
+    To get sensible units, you may need to change manually in the print statements.
+"""
+
+def uniProp(t,               #Time with unit
+            cosmo  = cosmoP, #Cosmology, astropy-style
+            Runit  = u.m,    #Unit to display size of Universe in
+            output = False   #Output Evernote string
+            ):
     """
     Properties of the Universe at time t.
     Note that z_eq is calculated from the cosmology, and doesn't agree exactly
@@ -23,7 +55,7 @@ def timeline(t,               #Time with unit
 
     Usage:
     >>> from astropy import units as u
-    >>> timeline(t=1e-32*u.s) # Properties just after inflation
+    >>> uniProp(t=1e-32*u.s) # Properties just after inflation
     """
 
 
@@ -45,7 +77,6 @@ def timeline(t,               #Time with unit
         return (f1*f2 / cosmo.H0).decompose()
 
     assert (isinstance(t,u.Quantity)) and (t.unit.is_equivalent(u.s)), 'Keyword `t` must have units of time.'
-    print(cosmo.Onu0, cosmo.Ogamma0, cosmo.Om0)
     a_eq = (cosmo.Onu0 + cosmo.Ogamma0) / cosmo.Om0
     z_eq = 1/a_eq - 1
     t_eq = (4/3. * (1 - 1/sqrt(2)) * (cosmo.Onu0 + cosmo.Ogamma0)**1.5/cosmo.Om0**2 / cosmo.H0).to(u.yr)
@@ -97,11 +128,8 @@ def timeline(t,               #Time with unit
         xe  = newton(Saha,x0,args=(T.value,cosmo))
     elif T <= 500*u.K:
         xe = 1e-10
-    mfp = meanFreePath(rhob,xe,X)
-    d_hor        = dP(z,cosmo)
-
-    clumps  = [2*30*u.kpc, 2*6371*u.km, 165*u.cm]
-    aclumps = [a*c.to(cunit) for c in clumps]
+    mfp   = meanFreePath(rhob,xe,X)
+    d_hor = dP(z,cosmo)
 
     u.c = 2.99792458e10 * u.cm / u.s
   # c = u.def_unit('c', 2.99792458e10 * u.cm / u.s)
@@ -128,7 +156,6 @@ def timeline(t,               #Time with unit
     print(' - Baryon pressure:    {:.3g}'.format(Pbar.to(u.cds.atm)))
     print(' - Temperature:        {:.1e}'.format(T))
     print(' - Energy:             {:.3f}'.format(E.to(u.MeV)))
-  # print(' - MW, Earth, Alice:   {:.1e},{:.1e},{:.1e}'.format(*aclumps))
 
     tt = t_radmat(a,a_eq)
     print('-----------')
@@ -148,23 +175,23 @@ def timeline(t,               #Time with unit
                    mfp.to(u.Gpc),
                    Pph.to(u.cds.atm)]
         print('              {:.3g}     {:.3g}                {:.3g}  {:.3g} {:.3g}  {:.3g}  {:.3g}                                     {:.3g}   {:.3g}   {:.3g}      {:.3g}    {:.3g}'.format(*numbers))
-#------------------------------------------------------------------------------
+
 
 def mue(X):             #Mean molecular mass per electron
     return 2. / (1+X)
-#------------------------------------------------------------------------------
+
 
 def ne(rhob,xe,X):      #Number density of electrons
     return xe * rhob / (mue(X)*cc.m_p)
-#------------------------------------------------------------------------------
+
 
 def meanFreePath(rhob,xe,X):     #Mean free path to Thomson scattering
     return 1 / (ne(rhob,xe,X) * cc.sigma_T)
-#------------------------------------------------------------------------------
+
 
 def Saha(xe,T,cosmo):
     return xe**2/(1-xe) - 5.8e15/(cosmo.Ob0*cosmo.h**2*(T/1e4)**1.5) * exp(-157000/T)
-#------------------------------------------------------------------------------
+
 
 def dP(z,cosmo):
     from astropy.cosmology import z_at_value
@@ -184,13 +211,30 @@ def dP(z,cosmo):
     eta,err = sp.integrate.quad(inva,0,cosmo.age(z).to(u.s).value) * u.s
 
     return cc.c * eta / (1+z)
-#------------------------------------------------------------------------------
 
 
 def main():
-    # Small test
-    timeline(t=1*u.yr)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('time', type=float, help='Time quantity')
+    parser.add_argument('unit', type=str,   help='Time unit (s,min,day,yr,kyr,Myr,Gyr)')
+    args = parser.parse_args()
 
+    if args.unit == 's':
+        time = args.time * u.s
+    elif args.unit == 'min':
+        time = args.time * u.min
+    elif args.unit == 'day':
+        time = args.time * u.day
+    elif args.unit == 'yr':
+        time = args.time * u.yr
+    elif args.unit == 'kyr':
+        time = args.time * u.kyr
+    elif args.unit == 'Myr':
+        time = args.time * u.Myr
+    elif args.unit == 'Gyr':
+        time = args.time * u.Gyr
+
+    uniProp(t=time, Runit=u.Glyr)
 
 if __name__ == '__main__':
     main()
