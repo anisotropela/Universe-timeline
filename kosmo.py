@@ -1,18 +1,17 @@
 import numpy as np
 from numpy import sqrt,pi,exp
 import scipy as sp
-from astropy.cosmology import FlatLambdaCDM
+from astropy.cosmology import FlatLambdaCDM, Planck15
 from astropy import units as u
 from astropy.units import cds
 import matplotlib.pyplot as plt
-from formats import *
 import astropy.constants as cc
 from scipy.special import zeta
 cosmoP = FlatLambdaCDM(H0=67.81, Om0=0.308, Ob0=.0484, name='Planck')
 from scipy.optimize import newton
 
 def timeline(t,               #Time with unit
-             cosmo  = cosmoP, #Cosmology, astropy-style
+             cosmo  = Planck15, #Cosmology, astropy-style
              Runit  = u.cm,   #Unit to display size of Universe in
              cunit  = u.cm,   #Unit to display clumps in
              output = False   #Output Evernote string
@@ -27,10 +26,15 @@ def timeline(t,               #Time with unit
     >>> timeline(t=1e-32*u.s) # Properties just after inflation
     """
 
+
     def photonPressure(T):  #Photon pressure
         return (pi**2 * cc.k_B**4 / (45 * cc.c**3 * cc.h**3) * T**4)
+
+
     def nph(T):             #Photon number density
         return 16 * pi * (cc.k_B*T / (cc.h*cc.c))**3 * zeta(3)
+
+
     def t_radmat(a,a_eq):   #Exact t-a relation in a radiation+matter universe
         """Ryden (2003): Eq. 6.37 (p. 94)"""
         import decimal
@@ -39,8 +43,9 @@ def timeline(t,               #Time with unit
         f1    = 4*a_eq**2 / (3*sqrt(cosmo.Onu0 + cosmo.Ogamma0))
         f2    = float(D(1) - (D(1) - D(a)/(2*D(a_eq))) * (D(1) + D(a)/D(a_eq)).sqrt())
         return (f1*f2 / cosmo.H0).decompose()
-      
+
     assert (isinstance(t,u.Quantity)) and (t.unit.is_equivalent(u.s)), 'Keyword `t` must have units of time.'
+    print(cosmo.Onu0, cosmo.Ogamma0, cosmo.Om0)
     a_eq = (cosmo.Onu0 + cosmo.Ogamma0) / cosmo.Om0
     z_eq = 1/a_eq - 1
     t_eq = (4/3. * (1 - 1/sqrt(2)) * (cosmo.Onu0 + cosmo.Ogamma0)**1.5/cosmo.Om0**2 / cosmo.H0).to(u.yr)
@@ -63,7 +68,7 @@ def timeline(t,               #Time with unit
     else:
         print('Matter epoch')
         from astropy.cosmology import z_at_value
-        z   = z_at_value(cosmoP.age, t, zmax=3500)
+        z   = z_at_value(cosmo.age, t, zmax=3500)
         a   = cosmo.scale_factor(z)
         rho = cosmo.critical_density(z)
         T   = cosmo.Tcmb(z)
@@ -172,7 +177,7 @@ def dP(z,cosmo):
         if t <= t_eq:
             a = sqrt(2 * sqrt(cosmo.Onu0+cosmo.Ogamma0) * (cosmo.H0 * t).decompose()).value
         else:
-            z = z_at_value(cosmoP.age, t*u.s, zmax=1e4)
+            z = z_at_value(cosmo.age, t*u.s, zmax=1e4)
             a = cosmo.scale_factor(z)
         return 1 / a
 
@@ -180,3 +185,12 @@ def dP(z,cosmo):
 
     return cc.c * eta / (1+z)
 #------------------------------------------------------------------------------
+
+
+def main():
+    # Small test
+    timeline(t=1*u.yr)
+
+
+if __name__ == '__main__':
+    main()
