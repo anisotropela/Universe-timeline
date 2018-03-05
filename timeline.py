@@ -35,11 +35,11 @@ def uniProp(t,                  #Time with unit
 
     Usage:
         From the command line:
-            > python timeline time unit [-Runit distance_unit]
+            > python timeline.py time unit [-Runit my_dist_unit]
         From Python environment:
             >>> from astropy import units as u
             >>> import timeline
-            >>> timeline.uniProp(t=time*unit [,Runit=distance_unit])
+            >>> timeline.uniProp(t=time*unit [,Runit=my_dist_unit])
 
     Arguments (for command line):
         time    Time quantity, i.e. a number
@@ -53,20 +53,20 @@ def uniProp(t,                  #Time with unit
                     Myr:    mega-years
                     Gyr:    giga-years
     Optional arguments:
-        -Runit distance_unit  Sensible units for distances are estimated. If you
-                              want other units, give the "-Runit" keyword,
-                              followed by your desired units, which can be any
-                              astropy unit, e.g. angstrom, km, Gpc.
-        -cosmo cosmology      Set of cosmological parameters, astropy style.
-                              Allowed cosmologies are WMAP5, WMAP7, WMAP9,
-                              Planck13, and Planck15 (default)
+        -Runit my_dist_unit  Sensible units for distances are estimated. If you
+                             want other units, give the "-Runit" keyword,
+                             followed by your desired units, which can be any
+                             astropy unit, e.g. angstrom, km, Gpc.
+        -cosmo my_cosmology  Set of cosmological parameters, astropy style.
+                             Allowed cosmologies are WMAP5, WMAP7, WMAP9,
+                             Planck13, and Planck15 (default)
 
     Examples:
-        > python timeline 1e-32 s            # Properties just after inflation
-        > python timeline 13.79 Gyr          # Properties today
-        > python timeline 500 Myr -Runit Gpc # Properties 500 million years after
-                                             # Big Bang, but use Gpc (giga-parsec)
-                                             # for distances
+        > python timeline.py 1e-32 s            # Properties just after inflation
+        > python timeline.py 13.79 Gyr          # Properties today
+        > python timeline.py 500 Myr -Runit Gpc # Properties 500 million years after
+                                                # Big Bang, but use Gpc (giga-parsec)
+                                                # for distances
 
     Same examples from Python environment:
         >>> from astropy import units as u
@@ -87,8 +87,9 @@ def uniProp(t,                  #Time with unit
         return 16 * pi * (cc.k_B*T / (cc.h*cc.c))**3 * zeta(3)
 
     # Calculate radiation-matter equality
-    assert (isinstance(t,u.Quantity)) and (t.unit.is_equivalent(u.s)), 'Keyword `t` must have units of time.'
-    assert 1e-32*u.s <= t, 't must be > t_endOfInflation'
+    assert (isinstance(t,u.Quantity)) and (t.unit.is_equivalent(u.s)), '\n\nKeyword `t` must have units of time.'
+    assert t >= 1e-32*u.s,    '\n\nt must be >= the end of inflation, which is assumed to be at 1e-32 s.'
+    assert t <= cosmo.age(0), "\n\nt must be <= the age of the Universe, which for the chosen cosmology is {:}".format(cosmo.age(0))
     a_eq = newton(a_eqSolver,3400.,args=(cosmo,))
     z_eq = 1/a_eq - 1
     t_eq = cosmo.age(z_eq).to(u.yr) # (4/3. * (1 - 1/sqrt(2)) * (cosmo.Onu0 + cosmo.Ogamma0)**1.5/cosmo.Om0**2 / cosmo.H0).to(u.yr)
@@ -109,7 +110,7 @@ def uniProp(t,                  #Time with unit
     else:
         epoch = 'matter epoch' if t<t_DE else 'dark energy epoch'
         from astropy.cosmology import z_at_value
-        z   = z_at_value(cosmo.age, t, zmax=3500)
+        z   = z_at_value(cosmo.age, t, zmin=0, zmax=5000)
         a   = cosmo.scale_factor(z)
         rho = cosmo.critical_density(z)
         T   = cosmo.Tcmb(z)
