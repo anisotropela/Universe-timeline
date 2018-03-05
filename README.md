@@ -1,5 +1,4 @@
-# Calculating the properties of the Universe from Big Bang to now
-# --- Documentation for the code `timeline.py`
+# Properties of the Universe from Big Bang to now --- Documentation for the code `timeline.py`
 
 ## Purpose
 
