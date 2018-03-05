@@ -2,24 +2,24 @@ import argparse
 import numpy as np
 from numpy import sqrt,pi,exp
 import scipy as sp
-from astropy.cosmology import FlatLambdaCDM, Planck15, WMAP9
+from astropy.cosmology import FlatLambdaCDM,WMAP5,WMAP7,WMAP9,Planck13,Planck15
 from astropy import units as u
 from astropy.units import cds
 import matplotlib.pyplot as plt
 import astropy.constants as cc
 from scipy.special import zeta
 from scipy.optimize import newton
-cosmoP = FlatLambdaCDM(H0       = 67.81,
-                       Om0      = 0.308,
-                       Ob0      = .0484,
-                     # Onu0     = 3.710122469245305e-05,
-                     # Ogamma0  = 5.373825182529615e-05,
-                       name     ='Planck')
+mycosmo = FlatLambdaCDM(H0       = 67.81,
+                        Om0      = 0.308,
+                        Ob0      = .0484,
+                      # Onu0     = 3.710122469245305e-05,
+                      # Ogamma0  = 5.373825182529615e-05,
+                        name     ='My cosmology')
 
-def uniProp(t,               #Time with unit
-            cosmo  = cosmoP, #Cosmology, astropy-style
-            Runit  = u.m,    #Unit to display size of Universe in
-            output = False   #Output Evernote string
+def uniProp(t,                  #Time with unit
+            cosmo  = Planck15,  #Cosmology, astropy-style
+            Runit  = u.m,       #Unit to display size of Universe in
+            output = False      #Output Evernote string
             ):
     """
     Purpose:
@@ -52,11 +52,14 @@ def uniProp(t,               #Time with unit
                     kyr:    kilo-years
                     Myr:    mega-years
                     Gyr:    giga-years
-    Optional arguments
+    Optional arguments:
         -Runit distance_unit  Sensible units for distances are estimated. If you
                               want other units, give the "-Runit" keyword,
                               followed by your desired units, which can be any
-                              astropy unit, e.g. angstrom, km,
+                              astropy unit, e.g. angstrom, km, Gpc.
+        -cosmo cosmology      Set of cosmological parameters, astropy style.
+                              Allowed cosmologies are WMAP5, WMAP7, WMAP9,
+                              Planck13, and Planck15 (default)
 
     Examples:
         > python timeline 1e-32 s            # Properties just after inflation
@@ -71,18 +74,6 @@ def uniProp(t,               #Time with unit
         >>> timeline.uniProp(1e-32*u.s)
         >>> timeline.uniProp(13.79*u.Gyr)
         >>> timeline.uniProp(500*u.Myr, Runit=u.Gpc)
-
-    Notes:
-        z_eq is calculated from the cosmology, and doesn't agree exactly with
-        the quoted value in Planck Collaboration et al. (2016).
-
-        For the article, I assumed a Planck(ian) cosmology, but with massless
-        neutrinos. The astropy.cosmology.Planck13/15 cosmologies assume massive
-        neutrinos, with alters the ratio between photons at late epochs.
-        I think this means that matter-radiation equality is calculated
-        somewhat differently that "a_eq = (Onu0+Ogamm0)/Om0", but I haven't got
-        the time to go into this, and anyway the results are correct to within
-        orders of unity, and decreasing with time.
     """
 
 
@@ -95,40 +86,28 @@ def uniProp(t,               #Time with unit
         """Photon number density"""
         return 16 * pi * (cc.k_B*T / (cc.h*cc.c))**3 * zeta(3)
 
-
-    def t_radmat(a,a_eq):
-        """Exact t-a relation in a radiation+matter universe.
-        Ryden (2003): Eq. 6.37 (p. 94)"""
-        import decimal
-        from decimal import Decimal as D
-        decimal.getcontext().prec = 50
-        f1    = 4*a_eq**2 / (3*sqrt(cosmo.Onu0 + cosmo.Ogamma0))
-        f2    = float(D(1) - (D(1) - D(a)/(2*D(a_eq))) * (D(1) + D(a)/D(a_eq)).sqrt())
-        return (f1*f2 / cosmo.H0).decompose()
-
-    # Calculate raiation-matter equality
+    # Calculate radiation-matter equality
     assert (isinstance(t,u.Quantity)) and (t.unit.is_equivalent(u.s)), 'Keyword `t` must have units of time.'
     assert 1e-32*u.s <= t, 't must be > t_endOfInflation'
-    a_eq = (cosmo.Onu0 + cosmo.Ogamma0) / cosmo.Om0
+    a_eq = newton(a_eqSolver,3400.,args=(cosmo,))
     z_eq = 1/a_eq - 1
-    t_eq = (4/3. * (1 - 1/sqrt(2)) * (cosmo.Onu0 + cosmo.Ogamma0)**1.5/cosmo.Om0**2 / cosmo.H0).to(u.yr)
+    t_eq = cosmo.age(z_eq).to(u.yr) # (4/3. * (1 - 1/sqrt(2)) * (cosmo.Onu0 + cosmo.Ogamma0)**1.5/cosmo.Om0**2 / cosmo.H0).to(u.yr)
     rho_eq = cosmo.critical_density(z_eq)
 
+    # Calculate matter-dark energy equality
+    a_DE = (cosmo.Om0 / cosmo.Ode0)**.3333333
+    z_DE = 1/a_DE - 1
+    t_DE = cosmo.age(z_DE).to(u.Gyr)
+
     # Calculate redshift, density, and temperature
-    t_thres = 20 * u.kyr # Threshold between a(t) schemes
     if t <= t_eq:
-        print('Photon epoch')
-        if t <= t_thres:
-            a = sqrt(2 * sqrt(cosmo.Onu0+cosmo.Ogamma0) * (cosmo.H0 * t).decompose()).value
-        else:
-            a = (a_eq * sqrt(t/t_eq).decompose()).value
+        epoch = 'photon epoch'
+        a   = (a_eq * sqrt(t/t_eq).decompose()).value
         rho = rho_eq * (a_eq/a)**4
         z   = 1./a - 1
         T   = cosmo.Tcmb0 / a
-        tt  = t_radmat(a,a_eq)
-        print(' - Precision:', (tt/t).decompose())
     else:
-        print('Matter epoch')
+        epoch = 'matter epoch' if t<t_DE else 'dark energy epoch'
         from astropy.cosmology import z_at_value
         z   = z_at_value(cosmo.age, t, zmax=3500)
         a   = cosmo.scale_factor(z)
@@ -169,11 +148,12 @@ def uniProp(t,               #Time with unit
     # Print results
     u.c = 2.99792458e10 * u.cm / u.s
   # c = u.def_unit('c', 2.99792458e10 * u.cm / u.s)
-    print('Age at rad-mat eq.:       {:.0f}'.format(cosmo.age(z_eq).to(u.yr)))
-    print('Redshift at rad-mat eq.:  {:.0f}'.format(z_eq))
-    print('Radius of Universe today: {:2.2f}'.format(R0.to(u.Glyr)))
+    print('Cosmology: ', cosmo)
+    print('Redshift and age at radiation-matter equality:   {:.0f} {:.0f}'.format(z_eq, (t_eq).to(u.yr)))
+    print('Redshift and age at matter-dark energy equality: {:.2f} {:.2f}'.format(z_DE, (t_DE).to(u.Gyr)))
+    print('Radius of Universe today:                        {:2.2f}'.format(R0.to(u.Glyr)))
     print()
-    print('Physical properties at t = {:}:'.format(t))
+    print('Physical properties at t = {:}'.format(t) + ' ('+epoch+'):')
     print(' * Expansion:')
     print('   - Scale factor:                         {:.3g}'.format(a))
     print('   - Redshift:                             {:.4g}'.format(z))
@@ -239,13 +219,15 @@ def dP(z,cosmo):
     """
     from astropy.cosmology import z_at_value
 
-    a_eq = (cosmo.Onu0 + cosmo.Ogamma0) / cosmo.Om0
+  # a_eq = (cosmo.Onu0 + cosmo.Ogamma0) / cosmo.Om0
+    a_eq = newton(a_eqSolver,3400.,args=(cosmo,))
     z_eq = 1/a_eq - 1
-    t_eq = (4/3. * (1 - 1/sqrt(2)) * (cosmo.Onu0 + cosmo.Ogamma0)**1.5/cosmo.Om0**2 / cosmo.H0).to(u.s).value
+    t_eq = cosmo.age(z_eq).to(u.s).value
 
     def inva(t):
         if t <= t_eq:
-            a = sqrt(2 * sqrt(cosmo.Onu0+cosmo.Ogamma0) * (cosmo.H0 * t).decompose()).value
+          # a = sqrt(2 * sqrt(cosmo.Onu0+cosmo.Ogamma0) * (cosmo.H0 * t).decompose()).value
+            a = a_eq * sqrt(t/t_eq)
         else:
             z = z_at_value(cosmo.age, t*u.s, zmax=1e4)
             a = cosmo.scale_factor(z)
@@ -256,13 +238,23 @@ def dP(z,cosmo):
     return cc.c * eta / (1+z)
 
 
+def a_eqSolver(a,cosmo):
+    z   = 1./a - 1
+    Og0 = cosmo.Ogamma0
+    Om0 = cosmo.Om0
+    fa  = cosmo.nu_relative_density(z)
+    return (1+fa) * Og0/Om0 - a
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('time',               type=float, help='Time quantity')
-    parser.add_argument('unit',               type=str,   help='Time unit (s,min,day,yr,kyr,Myr,Gyr)')
-    parser.add_argument('-Runit', default='', type=str,   help='Unit for distances (not exactly sure why this works)')
+    parser.add_argument('time',                       type=float, help='Time quantity')
+    parser.add_argument('unit',                       type=str,   help='Time unit (s,min,day,yr,kyr,Myr,Gyr)')
+    parser.add_argument('-Runit', default='',         type=str,   help='Unit for distances (not exactly sure why this works)')
+    parser.add_argument('-cosmo', default='Planck15', type=str,   help='Cosmology (WMAP5, WMAP7, WMAP9, Planck13, Planck15). Default is Planck15')
     args = parser.parse_args()
 
+    # Set time unit
     if args.unit == 's':
         time  = args.time * u.s
         Runit = u.cm
@@ -288,10 +280,27 @@ def main():
         print("Sorry, unit `"+args.unit+"` is not implemented.\nYou're welcome to go ahead and do it yourself,\nand then send me a pull request.")
         exit()
 
+    # Set distance unit
     if args.Runit != '':
         Runit = args.Runit
 
-    uniProp(t=time, Runit=Runit)
+    #Set cosmology
+    if args.cosmo == 'WMAP5':
+        cosmo = WMAP5
+    elif args.cosmo == 'WMAP7':
+        cosmo = WMAP7
+    elif args.cosmo == 'WMAP9':
+        cosmo = WMAP9
+    elif args.cosmo == 'Planck13':
+        cosmo = Planck13
+    elif args.cosmo == 'Planck15':
+        cosmo = Planck15
+    else:
+        print("Sorry, cosmology `"+args.cosmo+"` is not implemented.\nYou're welcome to go ahead and do it yourself,\nand then send me a pull request.")
+        exit()
+
+    # Calculate it!
+    uniProp(t=time, Runit=Runit, cosmo=cosmo)
 
 if __name__ == '__main__':
     main()
