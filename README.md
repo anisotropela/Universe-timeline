@@ -19,8 +19,11 @@ The advantage of `timeline` over other cosmological calculators on the internet
 is that it goes all the way back to inflation, 0.000...[31 zeros]..1 seconds
 after Big Bang.  
 
-It makes use of Python's [Astropy](http://www.astropy.org), but for the early
-epochs it "calculates backward" from radation-matter equality, assuming a
+Furthermore, where all these calculators calculate the properties for an input
+_redshift_, `timeline` calculates for an input _age of the Universe_.
+
+`timeline` makes use of Python's [Astropy](http://www.astropy.org), but for the
+early epochs it "calculates backward" from radation-matter equality, assuming a
 radiation-dominated Universe during that time.
 
 
