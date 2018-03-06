@@ -221,9 +221,13 @@ def dP(z,cosmo):
     from astropy.cosmology import z_at_value
 
   # a_eq = (cosmo.Onu0 + cosmo.Ogamma0) / cosmo.Om0
+    print(1)
     a_eq = newton(a_eqSolver,3400.,args=(cosmo,))
+    print(2)
     z_eq = 1/a_eq - 1
+    print(3)
     t_eq = cosmo.age(z_eq).to(u.s).value
+    print(4)
 
     def inva(t):
         if t <= t_eq:
@@ -233,8 +237,10 @@ def dP(z,cosmo):
             z = z_at_value(cosmo.age, t*u.s, zmax=1e4)
             a = cosmo.scale_factor(z)
         return 1 / a
+    print(5)
 
     eta,err = sp.integrate.quad(inva,0,cosmo.age(z).to(u.s).value) * u.s
+    print(6)
 
     return cc.c * eta / (1+z)
 

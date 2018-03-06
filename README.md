@@ -1,9 +1,27 @@
-# Properties of the Universe from Big Bang to now --- Documentation for the code `timeline.py`
+# Properties of the Universe from Big Bang to now --- Documentation for the cosmological calculator `timeline`
 
 ## Purpose
 
 Calculate various properties of the Universe at a given time _t_.
 
+The advantage of `timeline` over other cosmological calculators on the internet
+(such as
+[Ned Wright's famous CosmoCalc](http://www.astro.ucla.edu/~wright/CosmoCalc.html),
+[it's Python wrapper](http://cxc.harvard.edu/contrib/cosmocalc/),
+[CC](https://home.fnal.gov/~gnedin/cc/),
+[WolframAlpha](https://www.wolframalpha.com),
+[Astropy](http://www.astropy.org),
+[CosmoTools](http://www.bo.astro.it/~cappi/cosmotools),
+[cosmo](http://faraday.uwyo.edu/~chip/misc/Cosmo2/cosmo.cgi),
+[cosmocalc_2013](http://www.einsteins-theory-of-relativity-4engineers.com/cosmocalc_2013.htm),
+[cosmo_calc](http://www.oa-roma.inaf.it/zappacosta/cosmo_calc.html), and
+[cosmo_calc](http://srini.ph.unimelb.edu.au/cosmo_calc.php))
+is that it goes all the way back to inflation, 0.000...[31 zeros]..1 seconds
+after Big Bang.  
+
+It makes use of Python's [Astropy](http://www.astropy.org), but for the early
+epochs it "calculates backward" from radation-matter equality, assuming a
+radiation-dominated Universe during that time.
 
 
 ## History
@@ -29,8 +47,9 @@ don't have that, you can get it [here](https://www.python.org) (click
 "Downloads" and choose the one matching your computer).  
 
 ##### The `astropy` package
-In addition to standard Python libraries, you will need the `astropy` library.
-When you have Python installed, you can install `astropy` by typing 
+In addition to the standard Python installation, you will need the `astropy`
+library.  When you have Python installed, you can install `astropy` by
+typing 
 
     > pip install astropy
 (the `>` is just a way of showing that here comes a command; it shouldn't be
@@ -49,8 +68,9 @@ In a terminal, type the following command (in the same directory where you put
 
 ##### Arguments (for command line):
 
-In the above command, there are two mandatory arguments (or "keywords", i.e.
-words that must be written): 
+In the above command, `python` is the command to make Python run the program,
+`timeline.py` is the name of the progam. Additionally, there are two mandatory
+arguments (i.e. words that _must_ be written): 
 
     time    Time quantity, i.e. a number
 
@@ -66,7 +86,7 @@ words that must be written):
 
 ##### Optional arguments
 
-In addition to `time` and `unit`, you may give two more arguments; one for
+Optional arguments are words that _may_ be written. There are two; one for
 outputting the result in your preferred distance units, and one for using your
 preferred set of cosmological parameters. The syntax is 
 
@@ -145,3 +165,39 @@ and
 
     >>> from astropy.cosmology import Planck15
     >>> timeline.uniProp(1e-6*u.s, Runit=u.cm, cosmo=Planck13)`
+
+
+
+
+## Output
+
+The following values are written out for the Universe at the chosen time _t_
+
+* Expansion:
+  - Scale factor (_a_, size of the Universe relative to today)
+  - Redshift (_z_, how much light emitted from a source is "stretched" before it reaches us)
+  - Hubble parameter (_H(t)_, expansion rate of the Universe)
+* Size:
+  - Radius of observable Universe at _t_ (_d_<sub>P</sub>; how far away could an
+    observer at _t_ theoretically see. This is called _the particle horizon_,
+    and this calculation involves an integral that takes several seconds for
+    late epochs, so if you're impatient, you may want to delete this line from
+    the code) 
+  - Radius of today's obs. Universe at t (_a d_<sub>P,0</sub>; how big was the
+    part of the Universe that we can can see _today_ at that time) 
+  - Hubble distance (_c_ / _H(t)_; distance at which the expansion makes stuff
+    recede faster than the speed of light)
+* Gas and radiation:
+  - Temperature (_T_; average temperature of stuff in the Universe)
+  - Energy (_E_ = _k_<sub>B</sub>_T_; the corresponding energy of particles)
+  - Energy density (the total, average energy of atoms, radiation, and everything
+    else per volume)
+  - Ionized fraction (_x<sub>e</sub>_; fraction of hydrogen atoms that are ionized)
+  - Photon mean free path (how far can a photon travel before it hits an electron)
+    - mfp / _d_<sub>P</sub> (if this ratio is < 1, radation is coupled to matter;
+      if it is > 1, photons free-stream through the entire Universe)
+  - Photon no. density (Number of photons per cubic centimeter)
+  - Baryon no. density (Number of atoms per cubic centimeter)
+  - Photon pressure
+  - Baryon pressure
+
