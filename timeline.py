@@ -337,14 +337,14 @@ def rgb_from_T(T,std=False,ncol=1,showit=False):
     if T < 670:
         RGB = np.array([1,0,0])
     elif 670 <= T < 675:
-        RGB = rgb(lam,B,std=std,ncol=ncol,showit=showit)
+        RGB = rgb(lam,B,std=std,ncol=1,showit=showit)
         RGB[2] = 0
     elif 675 <= T < 1e7:
-        RGB = rgb(lam,B,std=std,ncol=ncol,showit=showit)
+        RGB = rgb(lam,B,std=std,ncol=1,showit=showit)
     else:
         RGB = np.array([0.63130101, 0.71233531, 1.])
 
-    return RGB
+    return ncol * RGB
 
 
 def rgb(lam,spec,std=False,ncol=1,showit=False):
