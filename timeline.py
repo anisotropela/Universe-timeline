@@ -20,7 +20,8 @@ mycosmo = FlatLambdaCDM(H0       = 67.81,
 def uniProp(t,                  #Time with unit
             cosmo  = Planck15,  #Cosmology, astropy-style
             Runit  = u.m,       #Unit to display size of Universe in
-            output = False      #Output Evernote string
+            output = False,     #Output Evernote string
+            showit = False
             ):
     """
     Purpose:
@@ -196,6 +197,10 @@ def uniProp(t,                  #Time with unit
                    Pph.to(u.cds.atm)]
         print('              {:.3g}     {:.3g}                {:.3g}  {:.3g} {:.3g}  {:.3g}  {:.3g}                                     {:.3g}   {:.3g}   {:.3g}      {:.3g}    {:.3g}'.format(*numbers))
 
+    if showit:
+        dummy = rgb_from_T(T/u.K, ncol=255, showit=True)
+
+
 
 def mue(X):
     """Mean molecular mass per electron"""
@@ -252,10 +257,11 @@ def a_eqSolver(a,cosmo):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('time',                       type=float, help='Time quantity')
-    parser.add_argument('unit',                       type=str,   help='Time unit (s,min,day,yr,kyr,Myr,Gyr)')
-    parser.add_argument('-Runit', default='',         type=str,   help='Unit for distances (not exactly sure why this works)')
-    parser.add_argument('-cosmo', default='Planck15', type=str,   help='Cosmology (WMAP5, WMAP7, WMAP9, Planck13, Planck15). Default is Planck15')
+    parser.add_argument('time',                         type=float, help='Time quantity')
+    parser.add_argument('unit',                         type=str,   help='Time unit (s,min,day,yr,kyr,Myr,Gyr)')
+    parser.add_argument('-Runit',   default='',         type=str,   help='Unit for distances (not exactly sure why this works)')
+    parser.add_argument('-cosmo',   default='Planck15', type=str,   help='Cosmology (WMAP5, WMAP7, WMAP9, Planck13, Planck15). Default is Planck15')
+    parser.add_argument('-showcol', action='store_true',            help='Show color in separate window')
     args = parser.parse_args()
 
     # Set time unit
@@ -304,7 +310,7 @@ def main():
         exit()
 
     # Calculate it!
-    uniProp(t=time, Runit=Runit, cosmo=cosmo)
+    uniProp(t=time, Runit=Runit, cosmo=cosmo, showit=args.showcol)
 
 
 def planck(lam, T):
@@ -334,15 +340,18 @@ def rgb_from_T(T,std=False,ncol=1,showit=False):
     lam = np.linspace(350,800,100)
     B   = planck(lam,T)
 
-    if T < 670:
-        RGB = np.array([1,0,0])
-    elif 670 <= T < 675:
-        RGB = rgb(lam,B,std=std,ncol=1,showit=showit)
-        RGB[2] = 0
-    elif 675 <= T < 1e7:
-        RGB = rgb(lam,B,std=std,ncol=1,showit=showit)
+    if showit:
+        RGB = rgb(lam,B,std=std,ncol=1,showit=True)
     else:
-        RGB = np.array([0.63130101, 0.71233531, 1.])
+        if T < 670:
+            RGB = np.array([1,0,0])
+        elif 670 <= T < 675:
+            RGB = rgb(lam,B,std=std,ncol=1,showit=False)
+            RGB[2] = 0
+        elif 675 <= T < 1e7:
+            RGB = rgb(lam,B,std=std,ncol=1,showit=False)
+        else:
+            RGB = np.array([0.63130101, 0.71233531, 1.])
 
     return ncol * RGB
 
@@ -401,6 +410,10 @@ def rgb(lam,spec,std=False,ncol=1,showit=False):
         ax.add_patch(rect)
         plt.tight_layout()
         plt.draw()
+        plt.show()
+        input("Hit Enter to quit")
+        plt.close()
+
 
     RGB = ncol * RGB                            #Normalize to number of colors
 
