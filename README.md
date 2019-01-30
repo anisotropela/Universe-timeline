@@ -170,8 +170,8 @@ The following values are written out for the Universe at the chosen time *t*
   - Energy density (the total, average energy of atoms, radiation, and everything
     else per volume)
   - Ionized fraction (*x<sub>e</sub>*; fraction of hydrogen atoms that are ionized)
-  - Photon mean free path (how far can a photon travel before it hits an electron): mfp / *d*<sub>P</sub> (if this ratio is < 1, radation is coupled to matter;
-      if it is > 1, photons free-stream through the entire Universe)
+  - Photon mean free path (how far can a photon travel before it hits an electron)
+	  - mfp / *d*<sub>P</sub> (if this ratio is < 1, radation is coupled to matter; if it is > 1, photons free-stream through the entire Universe)
   - Photon no. density (Number of photons per cubic centimeter)
   - Baryon no. density (Number of atoms per cubic centimeter)
   - Photon pressure
