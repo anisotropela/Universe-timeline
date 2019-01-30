@@ -1,8 +1,8 @@
-# Properties of the Universe from Big Bang to now --- Documentation for the cosmological calculator `timeline`
+# Properties of the Universe from Big Bang to now &mdash; Documentation for the cosmological calculator `timeline`
 
 ## Purpose
 
-Calculate various properties of the Universe at a given time _t_.
+Calculate various properties of the Universe at a given time $t$.
 
 The advantage of `timeline` over other cosmological calculators on the internet
 (such as
@@ -17,21 +17,23 @@ The advantage of `timeline` over other cosmological calculators on the internet
 [cosmo_calc](http://www.oa-roma.inaf.it/zappacosta/cosmo_calc.html), and
 [cosmo_calc](http://srini.ph.unimelb.edu.au/cosmo_calc.php))
 is that it goes all the way back to inflation, 0.000...[31 zeros]..1 seconds
-after Big Bang.  
+after Big Bang.
 
 Furthermore, where all these calculators calculate the properties for an input
-_redshift_, `timeline` calculates for an input _age of the Universe_, which is
+*redshift*, `timeline` calculates for an input *age of the Universe*, which is
 more intuitive for non-astronomers.
 
-`timeline` makes use of Python's [Astropy](http://www.astropy.org), but for the
+At late epochs, `timeline` makes use of Python's [Astropy](http://www.astropy.org) library, but for the
 early epochs it "calculates backward" from radation-matter equality, assuming a
 radiation-dominated Universe during that time.
 
 
-## History
+## Background
 
 The code was written in conjunction with the (Danish) popular science article
-"Big Bang --- en �jenvidneberetning" ("Big Bang --- an eyewitness account"), in
+"[Big Bang &mdash; en øjenvidneberetning](https://videnskab.dk/naturvidenskab/big-bang-en-oejenvidneberetning)"
+(translated to English:
+"[Big Bang &mdash; an eyewitness account](http://sciencenordic.com/big-bang-–-eyewitness-account)", and awarded best research outreach 2018 in Denmark at [ForskerZonen](https://videnskab.dk/forskerzonen)), in
 order to calculate various properties of the Universe. It is meant for being
 run from the command line, since this is more tractable to non-experts, but can
 also be run from a Python environment is a slightly different way.
@@ -40,17 +42,17 @@ also be run from a Python environment is a slightly different way.
 
 ## Prerequisites (mostly for non-experts)
 
-##### A terminal
+### A terminal
 First and foremost, you'll need to use a "terminal" which is a program that
 allows you to give commands to your computer. On most computers, you'll have
 an app called something like "Terminal".
 
-##### A Python installation
+### A Python installation
 The code is written in Python, so you'll need an installation of Python. If you
 don't have that, you can get it [here](https://www.python.org) (click
-"Downloads" and choose the one matching your computer).  
+"Downloads" and choose the one matching your computer).
 
-##### The `astropy` package
+### The `astropy` package
 In addition to the standard Python installation, you will need the `astropy`
 library.  When you have Python installed, you can install `astropy` by
 typing, in the terminal
@@ -59,24 +61,22 @@ typing, in the terminal
 (the `$` is just a way of showing that here comes a command; it shouldn't be
 included in the command. If you get an error when trying to install, try
 writing the word `sudo` in front of the above command, and then type your
-computer's password.) 
-
-
+computer's password.)
 
 <!-- ## Usage from the command line: -->
 
 ## Usage
 
 In a terminal, type the following command (in the same directory where you put
-`timeline.py`): 
+`timeline.py`):
 
     $ python timeline.py time unit [-Runit distance_unit] [-cosmo cosmology]
 
-##### Arguments (for command line):
+### Arguments (for command line)
 
 In the above command, `python` is the command to make Python run the program,
 `timeline.py` is the name of the progam. Additionally, there are two mandatory
-arguments (i.e. words that _must_ be written): 
+arguments (i.e. words that *must* be written):
 
     time    Time quantity, i.e. a number
 
@@ -90,11 +90,11 @@ arguments (i.e. words that _must_ be written):
             Myr:    mega-years
             Gyr:    giga-years
 
-##### Optional arguments
+### Optional arguments
 
-Optional arguments are words that _may_ be written. There are two; one for
+Optional arguments are words that *may* be written. There are two; one for
 outputting the result in your preferred distance units, and one for using your
-preferred set of cosmological parameters. The syntax is 
+preferred set of cosmological parameters. The syntax is
 
     -Runit my_dist_unit    Units for output distances.
                            Allowed values include:
@@ -108,13 +108,11 @@ preferred set of cosmological parameters. The syntax is
                            WMAP7, WMAP5.
 
 The words `-Runit` and `-cosmo` (don't forget the dash "`-`") are written
-after the command, followed by your preferred value.  
+after the command, followed by your preferred value.
 
 That is, if you want distances to be written in, say, parsec, you write
 `-Runit pc` after your command, and if you prefer a WMAP 2009 cosmology rather
 than a Planck 2015 cosmology, you append your command with `-cosmo WMAP9`.
-
-
 
 ## Examples
 
@@ -129,12 +127,12 @@ Calculate the properties today:
     $ python timeline.py 13.79 Gyr
 
 Calculate the properties 500 million years after Big Bang, but use Gpc
-(giga-parsec, i.e. billion parsec) for distances: 
+(giga-parsec, i.e. billion parsec) for distances:
 
     $ python timeline.py 500 Myr -Runit Gpc
 
 Calculate properties a microsecond after Big Bang, with distances written in
-cm, using a Planck 2013 cosmology: 
+cm, using a Planck 2013 cosmology:
 
     $ python timeline.py 1e-6 s -Runit cm -cosmo Planck13
 
@@ -174,33 +172,32 @@ and
 
 -->
 
-
 ## Output
 
-The following values are written out for the Universe at the chosen time _t_
+The following values are written out for the Universe at the chosen time $t$
 
 * Expansion:
-  - Scale factor (_a_, size of the Universe relative to today)
-  - Redshift (_z_, how much light emitted from a source is "stretched" before it reaches us)
-  - Hubble parameter (_H(t)_, expansion rate of the Universe)
+  - Scale factor ($a$, size of the Universe relative to today)
+  - Redshift ($z$, how much light emitted from a source is "stretched" before it reaches us)
+  - Hubble parameter ($H(t)$, expansion rate of the Universe)
 * Size:
-  - Radius of observable Universe at _t_ (_d_<sub>P</sub>; how far away could an
-    observer at _t_ theoretically see. This is called _the particle horizon_,
+  - Radius of observable Universe at $t$ ($d_\mathrm{P}$; how far away could an
+    observer at $t$ theoretically see. This is called *the particle horizon*,
     and this calculation involves an integral that takes several seconds for
     late epochs, so if you're impatient, you may want to delete this line from
-    the code) 
-  - Radius of today's obs. Universe at t (_a d_<sub>P,0</sub>; how big was the
-    part of the Universe that we can can see _today_ at that time) 
-  - Hubble distance (_c_ / _H(t)_; distance at which the expansion makes stuff
+    the code)
+  - Radius of today's obs. Universe at $t$ ($a \, d_\mathrm{P,0}$; how big was the
+    part of the Universe that we can can see *today* at that time)
+  - Hubble distance ($c / H(t)$; distance at which the expansion makes stuff
     recede faster than the speed of light)
 * Gas and radiation:
-  - Temperature (_T_; average temperature of stuff in the Universe)
-  - Energy (_E_ = _k_<sub>B</sub>_T_; the corresponding energy of particles)
+  - Temperature ($T$; average temperature of stuff in the Universe)
+  - Energy ($E = k_\mathrm{B} T$; the corresponding energy of particles)
   - Energy density (the total, average energy of atoms, radiation, and everything
     else per volume)
-  - Ionized fraction (_x<sub>e</sub>_; fraction of hydrogen atoms that are ionized)
+  - Ionized fraction ($x_\mathrm{e}$; fraction of hydrogen atoms that are ionized)
   - Photon mean free path (how far can a photon travel before it hits an electron)
-    - mfp / _d_<sub>P</sub> (if this ratio is < 1, radation is coupled to matter;
+    - mfp / $d_\mathrm{P}$ (if this ratio is < 1, radation is coupled to matter;
       if it is > 1, photons free-stream through the entire Universe)
   - Photon no. density (Number of photons per cubic centimeter)
   - Baryon no. density (Number of atoms per cubic centimeter)
