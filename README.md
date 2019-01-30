@@ -1,4 +1,4 @@
-# Properties of the Universe from Big Bang to now --- Documentation for the cosmological calculator `timeline`
+# Properties of the Universe from Big Bang to now &mdash; Documentation for the cosmological calculator `timeline`
   
 ## Purpose
 
