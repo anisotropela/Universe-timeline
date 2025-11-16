@@ -78,12 +78,12 @@ Optional arguments are words that *may* be written. There are two; one for outpu
 
     -cosmo my_cosmology    Set of cosmological parameters.
                            Allowed values are:
-                           Planck15 (default value), Planck13, WMAP9,
+                           Planck18 (default value), Planck15, Planck13, WMAP9,
                            WMAP7, WMAP5.
 
 The words `-Runit` and `-cosmo` (don't forget the dash "`-`") are written after the command, followed by your preferred value.
 
-That is, if you want distances to be written in, say, parsec, you write `-Runit pc` after your command, and if you prefer a WMAP 2009 cosmology rather than a Planck 2015 cosmology, you append your command with `-cosmo WMAP9`.
+That is, if you want distances to be written in, say, parsec, you write `-Runit pc` after your command, and if you prefer a WMAP 2009 cosmology rather than a Planck 2018 cosmology, you append your command with `-cosmo WMAP9`.
 
 
 
@@ -140,8 +140,8 @@ and the four examples above can then be executed with
 
 and
 
-    >>> from astropy.cosmology import Planck15
-    >>> timeline.uniProp(1e-6*u.s, Runit=u.cm, cosmo=Planck13)`
+    >>> from astropy.cosmology import Planck18
+    >>> timeline.uniProp(1e-6*u.s, Runit=u.cm, cosmo=Planck18)`
 
 -->
 
