@@ -2,14 +2,14 @@ import argparse
 import numpy as np
 from numpy import sqrt,pi,exp
 import scipy as sp
-from astropy.cosmology import FlatLambdaCDM,WMAP5,WMAP7,WMAP9,Planck13,Planck15
+from astropy.cosmology import FlatLambdaCDM,WMAP5,WMAP7,WMAP9,Planck13,Planck15,Planck18
 from astropy import units as u
 from astropy.units import cds
 import matplotlib.pyplot as plt
 import astropy.constants as cc
 from scipy.special import zeta
 from scipy.optimize import newton
-from scipy.integrate import simps
+from scipy.integrate import simpson
 mycosmo = FlatLambdaCDM(H0       = 67.81,
                         Om0      = 0.308,
                         Ob0      = .0484,
@@ -18,7 +18,7 @@ mycosmo = FlatLambdaCDM(H0       = 67.81,
                         name     ='My cosmology')
 
 def uniProp(t,                  #Time with unit
-            cosmo  = Planck15,  #Cosmology, astropy-style
+            cosmo  = Planck18,  #Cosmology, astropy-style
             Runit  = u.m,       #Unit to display size of Universe in
             output = False,     #Output Evernote string
             showit = False
@@ -61,7 +61,7 @@ def uniProp(t,                  #Time with unit
                              astropy unit, e.g. angstrom, km, Gpc.
         -cosmo my_cosmology  Set of cosmological parameters, astropy style.
                              Allowed cosmologies are WMAP5, WMAP7, WMAP9,
-                             Planck13, and Planck15 (default)
+                             Planck13, Planck15, and Planck18 (default)
 
     Examples:
         > python timeline.py 1e-32 s            # Properties just after inflation
@@ -221,6 +221,23 @@ def Saha(xe,T,cosmo):
     """Saha equation solver"""
     return xe**2/(1-xe) - 5.8e15/(cosmo.Ob0*cosmo.h**2*(T/1e4)**1.5) * exp(-157000/T)
 
+def particle_horizon_comoving(z,cosmo,zinf=2e6):
+    """
+    Comoving distance to the particle horizon at redshift z.
+    dinf is calculated using `comoving_distance`, which involves an integral
+    that doesn't converge for z > ~1e6-1e7, depending on cosmology. For
+    WMAP/Planck cosmologies, z ~ 2e7 is okay, but for H0=68-73 and Om0=28-32,
+    there's an unphysical dip to <0 around z ~ 1e6. The value z = 2e6 doesn't
+    give errors for a wide range of cosmologies, so that's what I use for 'z =
+    inf'.  This means that this function shouldn't be trusted for z > ~1e6.
+
+    dP increases from ~0 at z~inf, to ~46.3 Glyr at z=0, to ~63 Glyr at z=-1.
+    """
+    d    = cosmo.comoving_distance(z)    # Distance to an object at z
+    dinf = cosmo.comoving_distance(zinf) # Distance to an object at z=inf, i.e. dP today
+    return dinf - d
+#------------------------------------------------------------------------------
+
 
 def dP(z,cosmo):
     """
@@ -260,7 +277,7 @@ def main():
     parser.add_argument('time',                         type=float, help='Time quantity')
     parser.add_argument('unit',                         type=str,   help='Time unit (s,min,day,yr,kyr,Myr,Gyr)')
     parser.add_argument('-Runit',   default='',         type=str,   help='Unit for distances (not exactly sure why this works)')
-    parser.add_argument('-cosmo',   default='Planck15', type=str,   help='Cosmology (WMAP5, WMAP7, WMAP9, Planck13, Planck15). Default is Planck15')
+    parser.add_argument('-cosmo',   default='Planck18', type=str,   help='Cosmology (WMAP5, WMAP7, WMAP9, Planck13, Planck15, Planck18). Default is Planck18')
     parser.add_argument('-showcol', action='store_true',            help='Show color in separate window')
     args = parser.parse_args()
 
@@ -305,6 +322,8 @@ def main():
         cosmo = Planck13
     elif args.cosmo == 'Planck15':
         cosmo = Planck15
+    elif args.cosmo == 'Planck18':
+        cosmo = Planck18
     else:
         print("Sorry, cosmology `"+args.cosmo+"` is not implemented.\nYou're welcome to go ahead and do it yourself,\nand then send me a pull request.")
         exit()
@@ -434,9 +453,9 @@ def xy(lam,L):
     L = np.interp(lamcie,lam,L)                 #Interpolate to same axis
 
     #Tristimulus values
-    X = simps(L*xbar,lamcie)
-    Y = simps(L*ybar,lamcie)
-    Z = simps(L*zbar,lamcie)
+    X = simpson(L*xbar,lamcie)
+    Y = simpson(L*ybar,lamcie)
+    Z = simpson(L*zbar,lamcie)
     XYZ = np.array([X,Y,Z])
     x = X / sum(XYZ)
     y = Y / sum(XYZ)
